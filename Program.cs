@@ -18,7 +18,8 @@ namespace BassExample
             var decodeStream = Bass.CreateStream("track.mp3", Flags: BassFlags.Prescan | BassFlags.Decode);
 
             var bytelength = Bass.ChannelGetLength(decodeStream);
-            Console.WriteLine("音频总长：" + Bass.ChannelBytes2Seconds(decodeStream, bytelength));
+            var length = Bass.ChannelBytes2Seconds(decodeStream, bytelength);
+            Console.WriteLine("音频总长：" + length);
 
             //设置解码位置
             Bass.ChannelSetPosition(decodeStream, 114514, PositionFlags.Decode | PositionFlags.Bytes);
@@ -90,22 +91,31 @@ namespace BassExample
                 }
             }
 
-            Console.WriteLine("暂停");
+            Console.WriteLine("\n暂停");
             Bass.ChannelPause(tempoStream);
             await Task.Delay(1000);
             Bass.ChannelSetAttribute(tempoStream, ChannelAttribute.Tempo, (1 - 1) * 100f);
-            Console.WriteLine("播放...");
+            Console.WriteLine("\n播放...");
             Bass.ChannelPlay(tempoStream);
             await Task.Delay(10000);
-
-            //获取报错
-            Console.WriteLine(Bass.LastError);
 
             //销毁对象（很重要！！！！！！）
             Bass.ChannelStop(decodeStream);
             Bass.StreamFree(decodeStream);
             Bass.ChannelStop(tempoStream);
             Bass.StreamFree(tempoStream);
+
+            //如果不需要变速：(给各类效果音用的话)
+            var stream = Bass.CreateStream("track.mp3", Flags: BassFlags.Prescan);
+            Bass.ChannelPlay(stream, true);
+            await Task.Delay((int)(length*1000));
+            Bass.ChannelStop(stream);
+            Bass.StreamFree(stream);
+
+            //获取报错
+            Console.WriteLine(Bass.LastError);
+
+            
         }
     }
 }
